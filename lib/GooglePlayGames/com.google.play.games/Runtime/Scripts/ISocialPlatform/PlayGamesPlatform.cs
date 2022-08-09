@@ -106,9 +106,9 @@ namespace GooglePlayGames
             {
                 if (sInstance == null)
                 {
-                  OurUtils.Logger.d("Initializing the PlayGamesPlatform instance.");
-                  sInstance =
-                      new PlayGamesPlatform(PlayGamesClientFactory.GetPlatformPlayGamesClient());
+                    OurUtils.Logger.d("Initializing the PlayGamesPlatform instance.");
+                    sInstance =
+                        new PlayGamesPlatform(PlayGamesClientFactory.GetPlatformPlayGamesClient());
                 }
 
                 return sInstance;
@@ -193,15 +193,16 @@ namespace GooglePlayGames
 
 #endif
             }
-            else if (callback != null)
-            {
-                OurUtils.Logger.d("Nearby Already initialized: calling callback directly");
-                callback.Invoke(sNearbyConnectionClient);
-            }
             else
-            {
-                OurUtils.Logger.d("Nearby Already initialized");
-            }
+                if (callback != null)
+                {
+                    OurUtils.Logger.d("Nearby Already initialized: calling callback directly");
+                    callback.Invoke(sNearbyConnectionClient);
+                }
+                else
+                {
+                    OurUtils.Logger.d("Nearby Already initialized");
+                }
         }
 
         /// <summary>
@@ -292,8 +293,9 @@ namespace GooglePlayGames
         /// Services.
         /// </remarks>
         /// <param name="callback"></param>
-        public void ManuallyAuthenticate(Action<SignInStatus> callback) {
-          mClient.ManuallyAuthenticate(callback);
+        public void ManuallyAuthenticate(Action<SignInStatus> callback)
+        {
+            mClient.ManuallyAuthenticate(callback);
         }
 
         /// <summary>
@@ -505,21 +507,24 @@ namespace GooglePlayGames
                                     " is less than or equal to 1. You might be trying to use values in the range of [0,1], while values are expected to be within the range [0,100]. If you are using the latter, you can safely ignore this message.");
                             }
 
-                            mClient.SetStepsAtLeast(achievementID, progressToSteps(progress, ach[i].TotalSteps), callback);
+                            mClient.SetStepsAtLeast(achievementID,
+                                progressToSteps(progress, ach[i].TotalSteps), callback);
                         }
                         else
                         {
                             if (progress >= 100)
                             {
                                 // unlock it!
-                                GooglePlayGames.OurUtils.Logger.d("Progress " + progress + " interpreted as UNLOCK.");
+                                GooglePlayGames.OurUtils.Logger.d("Progress " + progress +
+                                                                  " interpreted as UNLOCK.");
                                 mClient.UnlockAchievement(achievementID, callback);
                             }
                             else
                             {
                                 // not enough to unlock
                                 GooglePlayGames.OurUtils.Logger.d(
-                                    "Progress " + progress + " not enough to unlock non-incremental achievement.");
+                                    "Progress " + progress +
+                                    " not enough to unlock non-incremental achievement.");
                                 callback.Invoke(false);
                             }
                         }
@@ -534,7 +539,8 @@ namespace GooglePlayGames
             });
         }
 
-        internal static int progressToSteps(double progress, int totalSteps) {
+        internal static int progressToSteps(double progress, int totalSteps)
+        {
             return (progress >= 100.0) ? totalSteps : (int) (progress * totalSteps / 100.0);
         }
 
@@ -732,7 +738,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("LoadAchievements can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "LoadAchievements can only be called after authentication.");
                 callback.Invoke(null);
 
                 return;
@@ -781,7 +788,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("ReportScore can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "ReportScore can only be called after authentication.");
                 if (callback != null)
                 {
                     callback.Invoke(false);
@@ -808,7 +816,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("ReportScore can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "ReportScore can only be called after authentication.");
                 if (callback != null)
                 {
                     callback.Invoke(false);
@@ -899,7 +908,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("LoadMoreScores can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "LoadMoreScores can only be called after authentication.");
                 callback(
                     new LeaderboardScoreData(
                         token.LeaderboardId,
@@ -939,7 +949,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("ShowAchievementsUI can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "ShowAchievementsUI can only be called after authentication.");
                 return;
             }
 
@@ -1005,7 +1016,8 @@ namespace GooglePlayGames
         {
             if (!IsAuthenticated())
             {
-                GooglePlayGames.OurUtils.Logger.e("ShowLeaderboardUI can only be called after authentication.");
+                GooglePlayGames.OurUtils.Logger.e(
+                    "ShowLeaderboardUI can only be called after authentication.");
                 if (callback != null)
                 {
                     callback(UIStatus.NotAuthorized);
@@ -1110,7 +1122,9 @@ namespace GooglePlayGames
                 board.id,
                 LeaderboardStart.PlayerCentered,
                 board.range.count > 0 ? board.range.count : mClient.LeaderboardMaxResults(),
-                board.userScope == UserScope.FriendsOnly ? LeaderboardCollection.Social : LeaderboardCollection.Public,
+                board.userScope == UserScope.FriendsOnly
+                    ? LeaderboardCollection.Social
+                    : LeaderboardCollection.Public,
                 timeSpan,
                 (scoreData) => HandleLoadingScores(
                     (PlayGamesLeaderboard) board, scoreData, callback));
