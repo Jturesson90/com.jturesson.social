@@ -1,0 +1,27 @@
+{
+  "name": "com.jturesson.social",
+  "displayName": "Jesper Turesson - Social",
+  "version": "0.0.1",
+  "unity": "2021.3",
+  "description": "Easy integration for ios and Android Social",
+  "keywords": [
+    "unity",
+    "social",
+    "Jesper Turesson"
+  ],
+  "homepage": "https://github.com/3d-group/unity-simple-notifications.git",
+  "bugs": {
+    "url": "https://github.com/3d-group/unity-simple-notifications/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/3d-group/unity-simple-notifications.git"
+  },
+  "license": "MIT",
+  "author": "Jesper Turesson",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {},
+  "type": "library"
+}
