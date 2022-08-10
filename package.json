@@ -1,7 +1,7 @@
 {
   "name": "com.jturesson.social",
   "displayName": "Jesper Turesson - Social",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "unity": "2021.3",
   "description": "Easy integration for ios and Android Social",
   "keywords": [
@@ -22,6 +22,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {},
   "type": "library"
 }

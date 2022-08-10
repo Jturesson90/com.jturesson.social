@@ -134,10 +134,8 @@ namespace GooglePlayGames.Editor
                     switch (dirs.Length)
                     {
                         case 0:
-                        break;
                             Alert("Plugin error: com.google.play.games folder was renamed");
                             throw new Exception("com.google.play.games folder was renamed");
-
                         case 1:
                             mRootPath = SlashesToPlatformSeparator(dirs[0]);
                             break;
