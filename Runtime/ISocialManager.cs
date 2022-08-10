@@ -7,6 +7,8 @@ namespace JTuresson.Social
     {
         public bool Authenticated { get; }
         public bool CloudSaveEnabled { get; }
+        public bool AchievementsEnabled { get; }
+        public bool LeaderboardsEnabled { get; }
         public IAchievements Achievements { get; }
         public ILeaderboards Leaderboards { get; }
 

@@ -56,7 +56,9 @@ namespace JTuresson.Social
         public bool Authenticated => _socialService.Authenticated;
         public bool UserCanSign => _socialService.UserCanSign;
         public string StoreName => _socialService.StoreName;
+        public bool LeaderboardsEnabled => _socialService.LeaderboardsEnabled;
         public bool CloudSaveEnabled => _socialService.CloudSaveEnabled;
+        public bool AchievementsEnabled => _socialService.AchievementsEnabled;
         public RuntimePlatform Platform => _socialService.Platform;
         public bool SocialEnabled { get; private set; }
 

@@ -1,7 +1,7 @@
 {
   "name": "com.jturesson.social",
   "displayName": "Jesper Turesson - Social",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "unity": "2021.3",
   "description": "Easy integration for ios and Android Social",
   "keywords": [
