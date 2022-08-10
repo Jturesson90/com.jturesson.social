@@ -13,15 +13,15 @@ namespace JTuresson.Social
 
         public bool UserCanSign => true;
 
-        private bool _isLoggedIn;
+        private bool _isAuthenticated;
 
         public bool Authenticated
         {
-            get => _isLoggedIn;
+            get => _isAuthenticated;
             private set
             {
-                if (_isLoggedIn == value) return;
-                _isLoggedIn = value;
+                if (_isAuthenticated == value) return;
+                _isAuthenticated = value;
                 IsAuthenticatedChanged?.Invoke(value);
             }
         }
@@ -63,7 +63,7 @@ namespace JTuresson.Social
             Authenticated = false;
         }
 
-        public void Login(Action<bool> callback)
+        public void Authenticate(Action<bool> callback)
         {
             if (Authenticated)
             {
@@ -74,12 +74,6 @@ namespace JTuresson.Social
             _social.localUser.Authenticate((bool success) => { });
             callback?.Invoke(Authenticated = true);
             IsAuthenticatedChanged?.Invoke(Authenticated);
-        }
-
-        public void Logout(Action<bool> callback)
-        {
-            Authenticated = false;
-            callback?.Invoke(true);
         }
 
         public void SaveGame(byte[] data, TimeSpan playedTime, Action<bool> callback)

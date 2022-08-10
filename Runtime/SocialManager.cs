@@ -15,23 +15,23 @@ namespace JTuresson.Social
         [SerializeField] private SocialMockSettingsSO mockSettings = default;
 
         private ISocialService _socialService;
-        public event EventHandler<SocialManagerArgs> LoggedInChanged;
-        public event EventHandler<bool> LoggingInPendingChanged;
+        public event EventHandler<SocialManagerArgs> AuthenticatedChanged;
+        public event EventHandler<bool> AuthenticatingPendingChanged;
         public event EventHandler<bool> OnUploadChanged;
         public event EventHandler<OnUploadCompleteArgs> OnUploadComplete;
         public event EventHandler<OnLoadFromCloudCompleteArgs> OnLoadFromCloudComplete;
 
-        private bool _loggingInPending = false;
+        private bool _authenticatingPending = false;
 
-        public bool LoggingInPending
+        public bool AuthenticatingPending
         {
-            get => _loggingInPending;
+            get => _authenticatingPending;
             private set
             {
-                if (_loggingInPending != value)
+                if (_authenticatingPending != value)
                 {
-                    _loggingInPending = value;
-                    LoggingInPendingChanged?.Invoke(this, _loggingInPending);
+                    _authenticatingPending = value;
+                    AuthenticatingPendingChanged?.Invoke(this, _authenticatingPending);
                 }
             }
         }
@@ -53,7 +53,7 @@ namespace JTuresson.Social
 
         public byte[] CloudData => _socialService.CloudData;
         public string UserName => _socialService.UserName;
-        public bool IsLoggedIn => _socialService.Authenticated;
+        public bool Authenticated => _socialService.Authenticated;
         public bool UserCanSign => _socialService.UserCanSign;
         public string StoreName => _socialService.StoreName;
         public bool CloudSaveEnabled => _socialService.CloudSaveEnabled;
@@ -115,7 +115,7 @@ namespace JTuresson.Social
         {
             if (!SocialEnabled) return;
 
-            Login();
+            Authenticate();
             if (_socialService.AchievementsEnabled)
             {
                 _achievements.Initialize();
@@ -138,24 +138,24 @@ namespace JTuresson.Social
             }
         }
 
-        public void Login()
+        public void Authenticate()
         {
             if (!SocialEnabled)
             {
                 throw new InvalidOperationException(
-                    "Must enable Social before attempting to login");
+                    "Must enable Social before authenticating");
             }
 
-            LoggingInPending = true;
-            _socialService.Login((bool success) =>
+            AuthenticatingPending = true;
+            _socialService.Authenticate((bool success) =>
                 {
                     if (success && CloudSaveEnabled)
                         LoadFromCloud();
 
-                    LoggingInPending = false;
-                    LoggedInChanged?.Invoke(this, new SocialManagerArgs()
+                    AuthenticatingPending = false;
+                    AuthenticatedChanged?.Invoke(this, new SocialManagerArgs()
                     {
-                        IsLoggedIn = _socialService.Authenticated,
+                        Authenticated = _socialService.Authenticated,
                         Platform = _socialService.Platform,
                         Name = _socialService.UserName
                     });
@@ -219,7 +219,7 @@ namespace JTuresson.Social
 
     public class SocialManagerArgs : EventArgs
     {
-        public bool IsLoggedIn { get; set; }
+        public bool Authenticated { get; set; }
         public RuntimePlatform Platform { get; set; }
         public string Name { get; internal set; }
     }

@@ -52,11 +52,7 @@ namespace JTuresson.Social
         {
         }
 
-        public void Login(Action<bool> callback)
-        {
-        }
-
-        public void Logout(Action<bool> callback)
+        public void Authenticate(Action<bool> callback)
         {
         }
 

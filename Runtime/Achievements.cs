@@ -25,9 +25,9 @@ namespace JTuresson.Social
             _unlockedAchievements = new Dictionary<string, IAchievement>();
         }
 
-        private void Session_IsAuthenticatedChanged(bool isLoggedIn)
+        private void Session_IsAuthenticatedChanged(bool authenticated)
         {
-            if (isLoggedIn)
+            if (authenticated)
             {
                 LoadAchievements();
             }

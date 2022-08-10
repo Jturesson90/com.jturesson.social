@@ -7,7 +7,7 @@ namespace JTuresson.Social
     public interface ISocialService : ISocialAchievements, ISocialLeaderboards, ISession, ICloudSave
     {
         void Initialize();
-        void Login(Action<bool> callback);
+        void Authenticate(Action<bool> callback);
         bool UserCanSign { get; }
         string UserName { get; }
         string StoreName { get; }

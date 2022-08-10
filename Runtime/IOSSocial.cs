@@ -68,7 +68,7 @@ namespace JTuresson.Social
             callback?.Invoke(false);
         }
 
-        public void Login(Action<bool> callback)
+        public void Authenticate(Action<bool> callback)
         {
             if (Authenticated)
             {

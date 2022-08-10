@@ -36,14 +36,14 @@ namespace Jturesson.Social
 
         private void Start()
         {
-            var isAlreadyLoggedIn = _socialManager.IsLoggedIn;
-            button.gameObject.SetActive(isAlreadyLoggedIn);
-            if (isAlreadyLoggedIn)
+            var isAuthenticated = _socialManager.Authenticated;
+            button.gameObject.SetActive(isAuthenticated);
+            if (isAuthenticated)
             {
                 UpdateImage(_socialManager.Platform);
             }
 
-            _socialManager.LoggedInChanged += SocialManager_LoggedInChanged;
+            _socialManager.AuthenticatedChanged += SocialManager_AuthenticatedChanged;
         }
 
         private void OnEnable()
@@ -60,7 +60,7 @@ namespace Jturesson.Social
         {
             if (_socialManager != null)
             {
-                _socialManager.LoggedInChanged -= SocialManager_LoggedInChanged;
+                _socialManager.AuthenticatedChanged -= SocialManager_AuthenticatedChanged;
             }
         }
 
@@ -72,9 +72,9 @@ namespace Jturesson.Social
             }
         }
 
-        private void SocialManager_LoggedInChanged(object sender, SocialManagerArgs e)
+        private void SocialManager_AuthenticatedChanged(object sender, SocialManagerArgs e)
         {
-            button.gameObject.SetActive(e.IsLoggedIn);
+            button.gameObject.SetActive(e.Authenticated);
             UpdateImage(e.Platform);
         }
 

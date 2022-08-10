@@ -17,8 +17,6 @@ namespace JTuresson.Social
         public bool UserCanSign => true;
         public string UserName => _social.GetUserDisplayName();
 
-        public bool IsLoggedIn => _social.localUser.authenticated;
-
         public string Name => _social.localUser.userName;
         public string StoreName { get; private set; }
 
@@ -57,7 +55,7 @@ namespace JTuresson.Social
 
         public void LoadFromCloud(Action<bool> callback)
         {
-            if (_currentlyLoadingFromCloud || !IsLoggedIn)
+            if (_currentlyLoadingFromCloud || !Authenticated)
             {
                 Debug.LogWarning("GooglePlaySocial loading or is not LoggedIn");
                 LoadComplete(false);
@@ -74,9 +72,9 @@ namespace JTuresson.Social
         }
 
 
-        public void Login(Action<bool> callback)
+        public void Authenticate(Action<bool> callback)
         {
-            if (IsLoggedIn)
+            if (Authenticated)
             {
                 callback?.Invoke(false);
                 return;
@@ -85,7 +83,7 @@ namespace JTuresson.Social
             _social.Authenticate(status =>
             {
                 callback?.Invoke(status == SignInStatus.Success);
-                IsAuthenticatedChanged?.Invoke(IsLoggedIn);
+                IsAuthenticatedChanged?.Invoke(Authenticated);
             });
         }
 
