@@ -35,6 +35,11 @@ namespace JTuresson.Social
         private readonly bool debugMode = false;
         private PlayGamesPlatform _social;
 
+        private Action<bool> _saveCallback;
+        private bool _currentlySavingToCloud = false;
+        private Action<bool> _loadCallback;
+        private bool _currentlyLoadingFromCloud = false;
+
         public GooglePlaySocial(SocialAndroidSettingsSO settings, PlayGamesPlatform social)
         {
             LeaderboardsEnabled = settings.leaderboards;
@@ -52,15 +57,15 @@ namespace JTuresson.Social
 
         public void LoadFromCloud(Action<bool> callback)
         {
-            if (currentlyLoadingFromCloud || !IsLoggedIn)
+            if (_currentlyLoadingFromCloud || !IsLoggedIn)
             {
                 Debug.LogWarning("GooglePlaySocial loading or is not LoggedIn");
                 LoadComplete(false);
                 return;
             }
 
-            currentlyLoadingFromCloud = true;
-            loadCallback = callback;
+            _currentlyLoadingFromCloud = true;
+            _loadCallback = callback;
 
             _social.SavedGame.OpenWithAutomaticConflictResolution(cloudFileName,
                 DataSource.ReadCacheOrNetwork,
@@ -87,14 +92,13 @@ namespace JTuresson.Social
 
         public void SaveGame(byte[] data, TimeSpan playedTime, Action<bool> callback)
         {
-            if (savingToCloud)
+            if (_currentlySavingToCloud)
             {
                 SaveComplete(false);
             }
 
-            ;
-            saveCallback = callback;
-            savingToCloud = true;
+            _saveCallback = callback;
+            _currentlySavingToCloud = true;
 
             _social.SavedGame.OpenWithAutomaticConflictResolution(cloudFileName,
                 DataSource.ReadCacheOrNetwork, ConflictResolutionStrategy.UseLongestPlaytime,
@@ -127,33 +131,28 @@ namespace JTuresson.Social
             );
         }
 
-        Action<bool> saveCallback;
-        bool savingToCloud = false;
 
         private void SaveComplete(bool success)
         {
-            savingToCloud = false;
-            if (saveCallback != null)
+            _currentlySavingToCloud = false;
+            if (_saveCallback != null)
             {
-                saveCallback.Invoke(success);
+                _saveCallback.Invoke(success);
             }
 
-            saveCallback = null;
+            _saveCallback = null;
         }
-
-        Action<bool> loadCallback;
-        bool currentlyLoadingFromCloud = false;
 
 
         private void LoadComplete(bool success)
         {
-            currentlyLoadingFromCloud = false;
-            if (loadCallback != null)
+            _currentlyLoadingFromCloud = false;
+            if (_loadCallback != null)
             {
-                loadCallback.Invoke(success);
+                _loadCallback.Invoke(success);
             }
 
-            loadCallback = null;
+            _loadCallback = null;
         }
 
 

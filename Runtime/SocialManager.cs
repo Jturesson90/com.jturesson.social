@@ -52,7 +52,7 @@ namespace JTuresson.Social
         }
 
         public byte[] CloudData => _socialService.CloudData;
-        public string Name => _socialService.UserName;
+        public string UserName => _socialService.UserName;
         public bool IsLoggedIn => _socialService.Authenticated;
         public bool UserCanSign => _socialService.UserCanSign;
         public string StoreName => _socialService.StoreName;
@@ -86,7 +86,6 @@ namespace JTuresson.Social
                 _socialService = new IOSSocial(iosSettings, UnityEngine.Social.Active);
             }
 #endif
-
 
             if (_socialService == null)
             {
@@ -141,30 +140,37 @@ namespace JTuresson.Social
 
         public void Login()
         {
-            if (SocialEnabled)
+            if (!SocialEnabled)
             {
-                LoggingInPending = true;
-                _socialService.Login((bool success) =>
-                    {
-                        if (success && CloudSaveEnabled)
-                            LoadFromCloud();
-
-                        LoggingInPending = false;
-                        LoggedInChanged?.Invoke(this, new SocialManagerArgs()
-                        {
-                            IsLoggedIn = _socialService.Authenticated,
-                            Platform = _socialService.Platform,
-                            Name = _socialService.UserName
-                        });
-                    }
-                );
+                throw new InvalidOperationException(
+                    "Must enable Social before attempting to login");
             }
+
+            LoggingInPending = true;
+            _socialService.Login((bool success) =>
+                {
+                    if (success && CloudSaveEnabled)
+                        LoadFromCloud();
+
+                    LoggingInPending = false;
+                    LoggedInChanged?.Invoke(this, new SocialManagerArgs()
+                    {
+                        IsLoggedIn = _socialService.Authenticated,
+                        Platform = _socialService.Platform,
+                        Name = _socialService.UserName
+                    });
+                }
+            );
         }
 
         public void SaveGame(bool manual = false)
         {
-            if (!SocialEnabled) return;
-            if (!CloudSaveEnabled || _cloudSaveData == null) return;
+            if (!SocialEnabled || !CloudSaveEnabled || _cloudSaveData == null)
+            {
+                throw new InvalidOperationException(
+                    "Must enable Social, Cloud and save data cant be null");
+            }
+
             UploadPending = true;
             TimeSpan timePlayed;
             try
@@ -192,15 +198,21 @@ namespace JTuresson.Social
 
         public void LoadFromCloud()
         {
-            if (!SocialEnabled) return;
-            if (!CloudSaveEnabled) return;
+            if (!SocialEnabled || !CloudSaveEnabled)
+            {
+                throw new InvalidOperationException("Must enable Social and Cloud save before");
+            }
+
             Debug.LogWarning("SocialManager LoadFromCloud");
             _socialService.LoadFromCloud((bool success) =>
             {
                 Debug.LogWarning("SocialManager LoadFromCloud success? " + success);
                 OnLoadFromCloudComplete?.Invoke(this,
                     new OnLoadFromCloudCompleteArgs()
-                        {Data = success ? CloudData : Array.Empty<byte>(), Success = success});
+                    {
+                        Data = success ? CloudSaveData.FromBytes(CloudData) : null,
+                        Success = success
+                    });
             });
         }
     }
@@ -220,6 +232,6 @@ namespace JTuresson.Social
     public class OnLoadFromCloudCompleteArgs : EventArgs
     {
         public bool Success { get; set; }
-        public byte[] Data { get; set; }
+        public CloudSaveData Data { get; set; }
     }
 }

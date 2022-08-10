@@ -24,15 +24,15 @@
  * THE SOFTWARE.
  */
 
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+
 namespace JTuresson.Social.IO
 {
-    using System;
-    using System.IO;
-    using System.Reflection;
-    using System.Runtime.Serialization;
-    using System.Runtime.Serialization.Formatters.Binary;
-
-    public class EasySerializer
+    public static class EasySerializer
     {
         public static void SerializeObjectToFile(object serializableObject, string filePath)
         {
@@ -40,8 +40,10 @@ namespace JTuresson.Social.IO
 
             Stream stream = File.Open(filePath, FileMode.Create);
 
-            BinaryFormatter formatter = new BinaryFormatter();
-            formatter.Binder = new VersionDeserializationBinder();
+            var formatter = new BinaryFormatter
+            {
+                Binder = new VersionDeserializationBinder()
+            };
             formatter.Serialize(stream, serializableObject);
 
             stream.Close();
@@ -76,9 +78,11 @@ namespace JTuresson.Social.IO
                 return null;
             }
 
-            BinaryFormatter formatter = new BinaryFormatter();
-            formatter.Binder = new VersionDeserializationBinder();
-            object o = formatter.Deserialize(stream);
+            var formatter = new BinaryFormatter
+            {
+                Binder = new VersionDeserializationBinder()
+            };
+            var o = formatter.Deserialize(stream);
 
             stream.Close();
 
@@ -104,19 +108,15 @@ namespace JTuresson.Social.IO
     {
         public override Type BindToType(string assemblyName, string typeName)
         {
-            if (!string.IsNullOrEmpty(assemblyName) && !string.IsNullOrEmpty(typeName))
-            {
-                Type typeToDeserialize = null;
+            if (string.IsNullOrEmpty(assemblyName) || string.IsNullOrEmpty(typeName)) return null;
+            Type typeToDeserialize = null;
 
-                assemblyName = Assembly.GetExecutingAssembly().FullName;
+            assemblyName = Assembly.GetExecutingAssembly().FullName;
 
-                // The following line of code returns the type. 
-                typeToDeserialize = Type.GetType(String.Format("{0}, {1}", typeName, assemblyName));
+            // The following line of code returns the type. 
+            typeToDeserialize = Type.GetType($"{typeName}, {assemblyName}");
 
-                return typeToDeserialize;
-            }
-
-            return null;
+            return typeToDeserialize;
         }
     }
 }

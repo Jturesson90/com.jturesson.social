@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace JTuresson.Social
+namespace Jturesson.Social
 {
     public class AchievementButton : MonoBehaviour
     {
