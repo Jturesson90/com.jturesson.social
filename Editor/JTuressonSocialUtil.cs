@@ -23,6 +23,10 @@ namespace JTuresson.Social.Editor
         private static string _externalDependencyManagerUrl = "com.google.external-dependency-manager";
         private static string _externalDependencyManagerVersion = "1.2.160";
 
+         static JTuressonSocialUtil()
+        {
+         Debug.Log("asdsadasd");   
+        }
         /// <summary>
         /// Menus the item for GPGS android setup.
         /// </summary>
