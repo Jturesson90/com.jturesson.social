@@ -40,7 +40,7 @@ namespace JTuresson.Social
 
         public GooglePlaySocial(SocialAndroidSettingsSO settings, PlayGamesPlatform social)
         {
-            Debug.LogError("Google Play Social - Instantiating with settings " + settings);
+            Debug.Log("Google Play Social - Instantiating with settings " + settings);
             LeaderboardsEnabled = settings.leaderboards;
             AchievementsEnabled = settings.achievements;
             CloudSaveEnabled = settings.cloudSave;
