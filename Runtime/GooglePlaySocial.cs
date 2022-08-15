@@ -47,7 +47,13 @@ namespace JTuresson.Social
             cloudFileName = settings.cloudFileName;
             StoreName = settings.storeName;
             debugMode = settings.debugLog;
-            _social = social ?? PlayGamesPlatform.Activate();
+            _social = social;
+
+            if (_social == null)
+            {
+                _social = PlayGamesPlatform.Activate();
+            }
+
             if (debugMode && _social == null)
             {
                 Debug.LogError("Google Play Social - Social is still null");

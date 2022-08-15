@@ -13,10 +13,8 @@ namespace JTuresson.Social.ScriptableObjects
 
         public override string ToString()
         {
-            return @$"Leaderboard enabled : {leaderboards}\n
-                    Achievements enabled : {leaderboards}\n
-                    CloudSave enabled : {leaderboards}\n
-                    StoreName: {storeName}";
+            return
+                $"Leaderboard enabled : {leaderboards}, Achievements enabled : {achievements} - CloudSave enabled : {cloudSave} - StoreName: {storeName}";
         }
     }
 }
