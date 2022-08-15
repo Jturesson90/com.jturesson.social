@@ -10,5 +10,13 @@ namespace JTuresson.Social.ScriptableObjects
 
         [Header("Store settings")] public string cloudFileName = "cloud_save1";
         public string storeName = "Store name";
+
+        public override string ToString()
+        {
+            return @$"Leaderboard enabled : {leaderboards}\n
+                    Achievements enabled : {leaderboards}\n
+                    CloudSave enabled : {leaderboards}\n
+                    StoreName: {storeName}";
+        }
     }
 }

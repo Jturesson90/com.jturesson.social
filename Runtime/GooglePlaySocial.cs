@@ -40,6 +40,7 @@ namespace JTuresson.Social
 
         public GooglePlaySocial(SocialAndroidSettingsSO settings, PlayGamesPlatform social)
         {
+            Debug.LogError("Google Play Social - Instantiating with settings " + settings);
             LeaderboardsEnabled = settings.leaderboards;
             AchievementsEnabled = settings.achievements;
             CloudSaveEnabled = settings.cloudSave;
@@ -47,6 +48,10 @@ namespace JTuresson.Social
             StoreName = settings.storeName;
             debugMode = settings.debugLog;
             _social = social ?? PlayGamesPlatform.Activate();
+            if (debugMode && _social == null)
+            {
+                Debug.LogError("Google Play Social - Social is still null");
+            }
         }
 
         public void Initialize()
@@ -74,14 +79,21 @@ namespace JTuresson.Social
 
         public void Authenticate(Action<bool> callback)
         {
+            if (debugMode)
+                Debug.Log("Google Play Social - Authenticating");
             if (Authenticated)
             {
+                if (debugMode)
+                    Debug.Log("Google Play Social - Authenticating - Already Authenticated");
                 callback?.Invoke(false);
                 return;
             }
 
             _social.Authenticate(status =>
             {
+                if (debugMode)
+                    Debug.Log("Google Play Social - Authenticating - Authenticating done with status " +
+                              status);
                 callback?.Invoke(status == SignInStatus.Success);
                 IsAuthenticatedChanged?.Invoke(Authenticated);
             });
@@ -197,6 +209,8 @@ namespace JTuresson.Social
 
         public void ShowAchievementsUI()
         {
+            if (debugMode)
+                Debug.Log("Google Play Social - ShowAchievementsUI");
             _social.ShowAchievementsUI();
         }
 
