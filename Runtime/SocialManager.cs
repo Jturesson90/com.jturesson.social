@@ -6,77 +6,48 @@ using UnityEngine.SocialPlatforms;
 
 namespace JTuresson.Social
 {
-    public class SocialManager : MonoBehaviour, ISocialManager
-    {
-        [Header("Platform settings")] [SerializeField]
-        private SocialAndroidSettingsSO androidSettings = default;
+	public class SocialManager : MonoBehaviour, ISocialManager
+	{
+		[Header("Platform settings")] [SerializeField]
+		private SocialAndroidSettingsSO androidSettings;
 
-        [SerializeField] private SocialIOSSettingsSO iosSettings = default;
-        [SerializeField] private SocialMockSettingsSO mockSettings = default;
+		[SerializeField] private SocialIOSSettingsSO iosSettings;
+		[SerializeField] private SocialMockSettingsSO mockSettings;
+		private Achievements _achievements;
 
-        private ISocialService _socialService;
-        public event EventHandler<SocialManagerArgs> AuthenticatedChanged;
-        public event EventHandler<bool> AuthenticatingPendingChanged;
-        public event EventHandler<bool> OnUploadChanged;
-        public event EventHandler<OnUploadCompleteArgs> OnUploadComplete;
-        public event EventHandler<OnLoadFromCloudCompleteArgs> OnLoadFromCloudComplete;
+		private bool _authenticatingPending;
 
-        private bool _authenticatingPending = false;
+		private CloudSaveData _cloudSaveData;
+		private Leaderboards _leaderboards;
 
-        public bool AuthenticatingPending
-        {
-            get => _authenticatingPending;
-            private set
-            {
-                if (_authenticatingPending != value)
-                {
-                    _authenticatingPending = value;
-                    AuthenticatingPendingChanged?.Invoke(this, _authenticatingPending);
-                }
-            }
-        }
+		private ISocialService _socialService;
 
-        private bool _uploadPending = false;
+		private bool _uploadPending;
 
-        public bool UploadPending
-        {
-            get => _uploadPending;
-            private set
-            {
-                if (_uploadPending != value)
-                {
-                    _uploadPending = value;
-                    OnUploadChanged?.Invoke(this, _uploadPending);
-                }
-            }
-        }
+		public bool UploadPending
+		{
+			get => _uploadPending;
+			private set
+			{
+				if (_uploadPending != value)
+				{
+					_uploadPending = value;
+					OnUploadChanged?.Invoke(this, _uploadPending);
+				}
+			}
+		}
 
-        public byte[] CloudData => _socialService.CloudData;
-        public string UserName => _socialService.UserName;
-        public bool Authenticated => _socialService.Authenticated;
-        public bool UserCanSign => _socialService.UserCanSign;
-        public string StoreName => _socialService.StoreName;
-        public bool LeaderboardsEnabled => _socialService.LeaderboardsEnabled;
-        public bool CloudSaveEnabled => _socialService.CloudSaveEnabled;
-        public bool AchievementsEnabled => _socialService.AchievementsEnabled;
-        public RuntimePlatform Platform => _socialService.Platform;
-        public bool SocialEnabled { get; private set; }
+		public byte[] CloudData => _socialService.CloudData;
+		public bool SocialEnabled { get; private set; }
 
-        private CloudSaveData _cloudSaveData;
-        public IAchievements Achievements { get; private set; }
-        private Achievements _achievements;
-
-        public ILeaderboards Leaderboards { get; private set; }
-        private Leaderboards _leaderboards;
-
-        protected void Awake()
-        {
+		protected void Awake()
+		{
 #if UNITY_EDITOR
-            if (mockSettings != null)
-            {
-                _socialService = new MockSocial(mockSettings, new FileManager(),
-                    new Local());
-            }
+			if (mockSettings != null)
+			{
+				_socialService = new MockSocial(mockSettings, new FileManager(),
+					new Local());
+			}
 #elif UNITY_ANDROID
             if (androidSettings != null)
             {
@@ -89,151 +60,187 @@ namespace JTuresson.Social
             }
 #endif
 
-            if (_socialService == null)
-            {
-                _socialService = new NoSocial();
-                SocialEnabled = false;
-            }
-            else
-            {
-                SocialEnabled = true;
-            }
+			if (_socialService == null)
+			{
+				_socialService = new NoSocial();
+				SocialEnabled = false;
+			}
+			else
+			{
+				SocialEnabled = true;
+			}
 
-            _socialService.Initialize();
+			_socialService.Initialize();
 
-            _achievements = new Achievements(_socialService, _socialService);
-            Achievements = _achievements;
+			_achievements = new Achievements(_socialService, _socialService);
+			Achievements = _achievements;
 
-            _leaderboards = new Leaderboards(_socialService, _socialService);
-            Leaderboards = _leaderboards;
-        }
+			_leaderboards = new Leaderboards(_socialService, _socialService);
+			Leaderboards = _leaderboards;
+		}
 
-        public void SetSaveDataBase(CloudSaveData saveData)
-        {
-            _cloudSaveData = saveData;
-        }
+		private void Start()
+		{
+			if (!SocialEnabled)
+			{
+				return;
+			}
 
-        private void Start()
-        {
-            if (!SocialEnabled) return;
+			Authenticate();
+			if (_socialService.AchievementsEnabled)
+			{
+				_achievements.Initialize();
+			}
 
-            Authenticate();
-            if (_socialService.AchievementsEnabled)
-            {
-                _achievements.Initialize();
-            }
+			if (_socialService.LeaderboardsEnabled)
+			{
+				_leaderboards.Initialize();
+			}
+		}
 
-            if (_socialService.LeaderboardsEnabled)
-            {
-                _leaderboards.Initialize();
-            }
-        }
+		protected void OnDestroy()
+		{
+			if (SocialEnabled)
+			{
+				if (_socialService.AchievementsEnabled)
+				{
+					_achievements.Save();
+				}
+			}
+		}
 
-        protected void OnDestroy()
-        {
-            if (SocialEnabled)
-            {
-                if (_socialService.AchievementsEnabled)
-                {
-                    _achievements.Save();
-                }
-            }
-        }
+		public event EventHandler<SocialManagerArgs> AuthenticatedChanged;
+		public event EventHandler<bool> AuthenticatingPendingChanged;
+		public event EventHandler<bool> OnUploadChanged;
+		public event EventHandler<OnUploadCompleteArgs> OnUploadComplete;
+		public event EventHandler<OnLoadFromCloudCompleteArgs> OnLoadFromCloudComplete;
 
-        public void Authenticate()
-        {
-            if (!SocialEnabled)
-            {
-                throw new InvalidOperationException(
-                    "Must enable Social before authenticating");
-            }
+		public bool AuthenticatingPending
+		{
+			get => _authenticatingPending;
+			private set
+			{
+				if (_authenticatingPending != value)
+				{
+					_authenticatingPending = value;
+					AuthenticatingPendingChanged?.Invoke(this, _authenticatingPending);
+				}
+			}
+		}
 
-            AuthenticatingPending = true;
-            _socialService.Authenticate((bool success) =>
-                {
-                    if (success && CloudSaveEnabled)
-                        LoadFromCloud();
+		public string UserName => _socialService.UserName;
+		public bool Authenticated => _socialService.Authenticated;
+		public bool UserCanSign => _socialService.UserCanSign;
+		public string StoreName => _socialService.StoreName;
+		public bool LeaderboardsEnabled => _socialService.LeaderboardsEnabled;
+		public bool CloudSaveEnabled => _socialService.CloudSaveEnabled;
+		public bool AchievementsEnabled => _socialService.AchievementsEnabled;
+		public RuntimePlatform Platform => _socialService.Platform;
+		public IAchievements Achievements { get; private set; }
 
-                    AuthenticatingPending = false;
-                    AuthenticatedChanged?.Invoke(this, new SocialManagerArgs()
-                    {
-                        Authenticated = _socialService.Authenticated,
-                        Platform = _socialService.Platform,
-                        Name = _socialService.UserName
-                    });
-                }
-            );
-        }
+		public ILeaderboards Leaderboards { get; private set; }
 
-        public void SaveGame(bool manual = false)
-        {
-            if (!SocialEnabled || !CloudSaveEnabled || _cloudSaveData == null)
-            {
-                throw new InvalidOperationException(
-                    "Must enable Social, Cloud and save data cant be null");
-            }
+		public void Authenticate()
+		{
+			if (!SocialEnabled)
+			{
+				throw new InvalidOperationException(
+					"Must enable Social before authenticating");
+			}
 
-            UploadPending = true;
-            TimeSpan timePlayed;
-            try
-            {
-                timePlayed = TimeSpan.FromSeconds(_cloudSaveData.totalPlayingTime);
-            }
-            catch
-            {
-                timePlayed = TimeSpan.FromSeconds(3600);
-            }
+			AuthenticatingPending = true;
+			_socialService.Authenticate(success =>
+				{
+					if (success && CloudSaveEnabled)
+					{
+						LoadFromCloud();
+					}
 
-            _socialService.SaveGame(_cloudSaveData.ToBytes(), timePlayed, (bool success) =>
-            {
-                UploadPending = false;
-                if (success)
-                {
-                    OnUploadComplete?.Invoke(this, new OnUploadCompleteArgs() {Manual = manual});
-                }
-                else
-                {
-                    Debug.LogWarning("SocialManager SaveGame FAIL");
-                }
-            });
-        }
+					AuthenticatingPending = false;
+					AuthenticatedChanged?.Invoke(this, new SocialManagerArgs
+					{
+						Authenticated = _socialService.Authenticated,
+						Platform = _socialService.Platform,
+						Name = _socialService.UserName,
+					});
+				}
+			);
+		}
 
-        public void LoadFromCloud()
-        {
-            if (!SocialEnabled || !CloudSaveEnabled)
-            {
-                throw new InvalidOperationException("Must enable Social and Cloud save before");
-            }
+		public void SaveGame(bool manual = false)
+		{
+			if (!SocialEnabled || !CloudSaveEnabled || _cloudSaveData == null)
+			{
+				throw new InvalidOperationException(
+					"Must enable Social, Cloud and save data cant be null");
+			}
 
-            Debug.LogWarning("SocialManager LoadFromCloud");
-            _socialService.LoadFromCloud((bool success) =>
-            {
-                Debug.LogWarning("SocialManager LoadFromCloud success? " + success);
-                OnLoadFromCloudComplete?.Invoke(this,
-                    new OnLoadFromCloudCompleteArgs()
-                    {
-                        Data = success ? CloudSaveData.FromBytes(CloudData) : null,
-                        Success = success
-                    });
-            });
-        }
-    }
+			UploadPending = true;
+			TimeSpan timePlayed;
+			try
+			{
+				timePlayed = TimeSpan.FromSeconds(_cloudSaveData.totalPlayingTime);
+			}
+			catch
+			{
+				timePlayed = TimeSpan.FromSeconds(3600);
+			}
 
-    public class SocialManagerArgs : EventArgs
-    {
-        public bool Authenticated { get; set; }
-        public RuntimePlatform Platform { get; set; }
-        public string Name { get; internal set; }
-    }
+			_socialService.SaveGame(_cloudSaveData.ToBytes(), timePlayed, success =>
+			{
+				UploadPending = false;
+				if (success)
+				{
+					OnUploadComplete?.Invoke(this, new OnUploadCompleteArgs { Manual = manual });
+				}
+				else
+				{
+					Debug.LogWarning("SocialManager SaveGame FAIL");
+				}
+			});
+		}
 
-    public class OnUploadCompleteArgs : EventArgs
-    {
-        public bool Manual { get; set; }
-    }
+		public void SetSaveDataBase(CloudSaveData saveData)
+		{
+			_cloudSaveData = saveData;
+		}
 
-    public class OnLoadFromCloudCompleteArgs : EventArgs
-    {
-        public bool Success { get; set; }
-        public CloudSaveData Data { get; set; }
-    }
+		public void LoadFromCloud()
+		{
+			if (!SocialEnabled || !CloudSaveEnabled)
+			{
+				throw new InvalidOperationException("Must enable Social and Cloud save before");
+			}
+
+			Debug.LogWarning("SocialManager LoadFromCloud");
+			_socialService.LoadFromCloud(success =>
+			{
+				Debug.LogWarning("SocialManager LoadFromCloud success? " + success);
+				OnLoadFromCloudComplete?.Invoke(this,
+					new OnLoadFromCloudCompleteArgs
+					{
+						Data = success ? CloudSaveData.FromBytes(CloudData) : null,
+						Success = success,
+					});
+			});
+		}
+	}
+
+	public class SocialManagerArgs : EventArgs
+	{
+		public bool Authenticated { get; set; }
+		public RuntimePlatform Platform { get; set; }
+		public string Name { get; internal set; }
+	}
+
+	public class OnUploadCompleteArgs : EventArgs
+	{
+		public bool Manual { get; set; }
+	}
+
+	public class OnLoadFromCloudCompleteArgs : EventArgs
+	{
+		public bool Success { get; set; }
+		public CloudSaveData Data { get; set; }
+	}
 }

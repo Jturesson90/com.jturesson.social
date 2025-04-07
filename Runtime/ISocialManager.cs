@@ -3,20 +3,26 @@ using UnityEngine;
 
 namespace JTuresson.Social
 {
-    public interface ISocialManager
-    {
-        public bool Authenticated { get; }
-        public bool CloudSaveEnabled { get; }
-        public bool AchievementsEnabled { get; }
-        public bool LeaderboardsEnabled { get; }
-        public IAchievements Achievements { get; }
-        public ILeaderboards Leaderboards { get; }
+	public interface ISocialManager
+	{
+		bool Authenticated { get; }
+		bool CloudSaveEnabled { get; }
+		bool AchievementsEnabled { get; }
+		bool LeaderboardsEnabled { get; }
+		IAchievements Achievements { get; }
+		ILeaderboards Leaderboards { get; }
+		bool AuthenticatingPending { get; }
 
-        public RuntimePlatform Platform { get; }
-        public event EventHandler<SocialManagerArgs> AuthenticatedChanged;
-        public event EventHandler<bool> AuthenticatingPendingChanged;
-        public event EventHandler<bool> OnUploadChanged;
-        public event EventHandler<OnUploadCompleteArgs> OnUploadComplete;
-        public event EventHandler<OnLoadFromCloudCompleteArgs> OnLoadFromCloudComplete;
-    }
+		RuntimePlatform Platform { get; }
+		bool UserCanSign { get; }
+		string StoreName { get; }
+		string UserName { get; }
+		event EventHandler<SocialManagerArgs> AuthenticatedChanged;
+		event EventHandler<bool> AuthenticatingPendingChanged;
+		event EventHandler<bool> OnUploadChanged;
+		event EventHandler<OnUploadCompleteArgs> OnUploadComplete;
+		event EventHandler<OnLoadFromCloudCompleteArgs> OnLoadFromCloudComplete;
+		void Authenticate();
+		void SaveGame(bool b);
+	}
 }
