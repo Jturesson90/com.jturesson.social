@@ -48,6 +48,11 @@ namespace JTuresson.Social
         {
         }
 
+        public void ReportLeaderboardInteger(int score, string leaderboardId, Action<bool> callback)
+        {
+            throw new NotImplementedException();
+        }
+
         public void LoadUserLeaderboardScore(ILeaderboard leaderboard, Action<bool> callback)
         {
         }
@@ -56,11 +61,11 @@ namespace JTuresson.Social
         {
         }
 
-        public void ReportLeaderboardScore(long score, string leaderboardId, Action<bool> callback)
+        public void ReportLeaderboardTime(long score, string leaderboardId, Action<bool> callback)
         {
         }
 
-        public void ReportLeaderboardScore(long score, string leaderboardId, string tag,
+        public void ReportLeaderboardTime(long score, string leaderboardId, string tag,
             Action<bool> callback)
         {
         }

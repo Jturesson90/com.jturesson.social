@@ -1,14 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace JTuresson.Social
 {
-    public interface IAchievements
-    {
-        void Unlock(string achievementId, Action<bool> callback);
+	public interface IAchievements
+	{
+		IReadOnlyList<string> UnlockedAchievementIds { get; }
+		IReadOnlyList<string> AllAchievementIds { get; }
+		event Action<IReadOnlyList<string>> UnlockedAchievementsChanged;
+		event Action<IReadOnlyList<string>> AllAchievementsChanged;
 
-        void Increment(string achievementId, double steps, double stepsToComplete,
-            Action<bool> callback);
+		void Unlock(string achievementId, Action<bool> callback);
 
-        void ShowUI();
-    }
+		void Increment(string achievementId, double steps, double stepsToComplete,
+			Action<bool> callback);
+
+		void ShowUI();
+	}
 }

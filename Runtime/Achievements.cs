@@ -3,219 +3,268 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JTuresson.Social;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
 namespace JTuresson.Social
 {
-    public class Achievements : IAchievements
-    {
-        private PendingAchievements _pendingAchievements;
-        private Dictionary<string, IAchievement> _unlockedAchievements;
+	public class Achievements : IAchievements
+	{
+		private const string SaveKey = "pend";
+		private readonly Dictionary<string, IAchievement> _allAchievements;
+		private readonly ISession _session;
 
-        private readonly ISocialAchievements _socialAchievements;
-        private readonly ISession _session;
+		private readonly ISocialAchievements _socialAchievements;
+		private readonly Dictionary<string, IAchievement> _unlockedAchievements;
+		private PendingAchievements _pendingAchievements;
 
-        public Achievements(ISocialAchievements socialAchievements, ISession session)
-        {
-            _socialAchievements = socialAchievements;
-            _session = session;
-            _pendingAchievements = new PendingAchievements();
-            _unlockedAchievements = new Dictionary<string, IAchievement>();
-        }
+		public Achievements(ISocialAchievements socialAchievements, ISession session)
+		{
+			_socialAchievements = socialAchievements;
+			_session = session;
+			_pendingAchievements = new PendingAchievements();
+			_unlockedAchievements = new Dictionary<string, IAchievement>();
+			_allAchievements = new Dictionary<string, IAchievement>();
+		}
 
-        private void Session_IsAuthenticatedChanged(bool authenticated)
-        {
-            if (authenticated)
-            {
-                LoadAchievements();
-            }
-        }
+		public IReadOnlyList<string> UnlockedAchievementIds => _unlockedAchievements.Keys.ToList();
 
-        public void Initialize()
-        {
-            LoadFromDisk();
-            if (_session.Authenticated)
-            {
-                LoadAchievements();
-            }
-            else
-            {
-                _session.IsAuthenticatedChanged += Session_IsAuthenticatedChanged;
-            }
-        }
+		public IReadOnlyList<string> AllAchievementIds => _allAchievements.Keys.ToList();
 
-        public void Save()
-        {
-            SaveToDisk();
-        }
+		public event Action<IReadOnlyList<string>> UnlockedAchievementsChanged;
+		public event Action<IReadOnlyList<string>> AllAchievementsChanged;
 
-        ~Achievements()
-        {
-            SaveToDisk();
-        }
+		public void Unlock(string id, Action<bool> callback = null)
+		{
+			if (!_socialAchievements.AchievementsEnabled)
+			{
+				return;
+			}
 
-        private void FlushAchievements()
-        {
-            if (!_session.Authenticated) return;
+			var s = new DroleAchievement(id);
+			if (!_session.Authenticated)
+			{
+				AddPendingAchievement(s);
+				return;
+			}
 
-            foreach (var pending in _pendingAchievements.pending)
-            {
-                if (pending.hasIncrement)
-                {
-                    Increment(pending.id, pending.steps, pending.stepsToComplete);
-                }
-                else
-                {
-                    Unlock(pending.id);
-                }
-            }
-        }
+			_socialAchievements.UnlockAchievement(id, success =>
+			{
+				if (success)
+				{
+					RemovePendingAchievement(s);
+				}
+				else
+				{
+					AddPendingAchievement(s);
+				}
 
-        public void Unlock(string id, Action<bool> callback = null)
-        {
-            if (!_socialAchievements.AchievementsEnabled) return;
-            var s = new DroleAchievement(id);
-            if (!_session.Authenticated)
-            {
-                AddPendingAchievement(s);
-                return;
-            }
+				callback?.Invoke(success);
+			});
+		}
 
-            _socialAchievements.UnlockAchievement(id, (bool success) =>
-            {
-                if (success)
-                    RemovePendingAchievement(s);
-                else
-                    AddPendingAchievement(s);
+		public void Increment(string id, double steps, double stepsRatio, Action<bool> callback = null)
+		{
+			if (!_socialAchievements.AchievementsEnabled)
+			{
+				return;
+			}
 
-                callback?.Invoke(success);
-            });
-        }
+			var s = new DroleAchievement(id, steps, stepsRatio);
+			if (!_session.Authenticated)
+			{
+				AddPendingAchievement(s);
+				return;
+			}
 
-        public void Increment(string id, double steps, double stepsRatio, Action<bool> callback = null)
-        {
-            if (!_socialAchievements.AchievementsEnabled) return;
-            var s = new DroleAchievement(id, steps, stepsRatio);
-            if (!_session.Authenticated)
-            {
-                AddPendingAchievement(s);
-                return;
-            }
+			_socialAchievements.IncrementAchievement(id, s.steps, s.stepsToComplete, success =>
+			{
+				if (success)
+				{
+					RemovePendingAchievement(s);
+				}
+				else
+				{
+					AddPendingAchievement(s);
+				}
 
-            _socialAchievements.IncrementAchievement(id, s.steps, s.stepsToComplete, (bool success) =>
-            {
-                if (success)
-                    RemovePendingAchievement(s);
-                else
-                    AddPendingAchievement(s);
+				callback?.Invoke(success);
+			});
+		}
 
-                callback?.Invoke(success);
-            });
-        }
+		public void ShowUI()
+		{
+			if (!_socialAchievements.AchievementsEnabled)
+			{
+				return;
+			}
 
-        private void RemovePendingAchievement(DroleAchievement pendingAchievement)
-        {
-            if (_pendingAchievements != null)
-            {
-                _pendingAchievements.RemoveAchievement(pendingAchievement);
-            }
-        }
+			_socialAchievements.ShowAchievementsUI();
+		}
 
-        private void AddPendingAchievement(DroleAchievement pendingAchievement)
-        {
-            if (_pendingAchievements != null)
-            {
-                _pendingAchievements.AddAchievement(pendingAchievement);
-            }
-        }
+		private void Session_IsAuthenticatedChanged(bool authenticated)
+		{
+			if (authenticated)
+			{
+				LoadAchievements();
+			}
+		}
 
-        public void ShowUI()
-        {
-            if (!_socialAchievements.AchievementsEnabled) return;
-            _socialAchievements.ShowAchievementsUI();
-        }
+		public void Initialize()
+		{
+			LoadFromDisk();
+			if (_session.Authenticated)
+			{
+				LoadAchievements();
+			}
+			else
+			{
+				_session.IsAuthenticatedChanged += Session_IsAuthenticatedChanged;
+			}
+		}
 
-        private void LoadAchievements()
-        {
-            _unlockedAchievements.Clear();
-            _socialAchievements.LoadAchievements(achievements =>
-            {
-                _unlockedAchievements = new Dictionary<string, IAchievement>();
-                foreach (var achievement in achievements)
-                {
-                    if (achievement.completed)
-                    {
-                        _unlockedAchievements.Add(achievement.id, achievement);
-                    }
-                }
+		public void Save()
+		{
+			SaveToDisk();
+		}
 
-                if (_pendingAchievements != null)
-                    _pendingAchievements.RemoveAllWithId(_unlockedAchievements.Keys.ToArray());
+		private void FlushAchievements()
+		{
+			if (!_session.Authenticated)
+			{
+				return;
+			}
 
-                FlushAchievements();
-            });
-            SaveToDisk();
-        }
+			foreach (DroleAchievement pending in _pendingAchievements.pending)
+			{
+				if (pending.hasIncrement)
+				{
+					Increment(pending.id, pending.steps, pending.stepsToComplete);
+				}
+				else
+				{
+					Unlock(pending.id);
+				}
+			}
+		}
 
-        const string saveKey = "pend";
+		private void RemovePendingAchievement(DroleAchievement pendingAchievement)
+		{
+			if (_pendingAchievements != null)
+			{
+				_pendingAchievements.RemoveAchievement(pendingAchievement);
+				UpdateAchievements(pendingAchievement.id);
+			}
+		}
 
-        private void SaveToDisk()
-        {
-            var json = _pendingAchievements.ToString();
-            PlayerPrefs.SetString(saveKey, json);
-            PlayerPrefs.Save();
-        }
+		private void AddPendingAchievement(DroleAchievement pendingAchievement)
+		{
+			if (_pendingAchievements != null)
+			{
+				_pendingAchievements.AddAchievement(pendingAchievement);
+				UpdateAchievements(pendingAchievement.id);
+			}
+		}
 
-        private void LoadFromDisk()
-        {
-            var s = PlayerPrefs.GetString(saveKey, string.Empty);
-            if (s == null || s.Trim().Length == 0)
-            {
-                _pendingAchievements = new PendingAchievements();
-            }
-            else
-            {
-                _pendingAchievements = PendingAchievements.FromString(s);
-            }
-        }
-    }
+		private void UpdateAchievements(string id)
+		{
+			if (_allAchievements.ContainsKey(id))
+			{
+				if (!_unlockedAchievements.ContainsKey(id))
+				{
+					_unlockedAchievements.Add(id, _unlockedAchievements[id]);
+					UnlockedAchievementsChanged?.Invoke(UnlockedAchievementIds);
+				}
+			}
+		}
 
-    [Serializable]
-    public class PendingAchievements
-    {
-        public List<DroleAchievement> pending;
+		private void LoadAchievements()
+		{
+			_unlockedAchievements.Clear();
+			_allAchievements.Clear();
+			_socialAchievements.LoadAchievements(achievements =>
+			{
+				foreach (IAchievement achievement in achievements)
+				{
+					_allAchievements.Add(achievement.id, achievement);
+					if (achievement.completed)
+					{
+						_unlockedAchievements.Add(achievement.id, achievement);
+					}
+				}
 
-        public static PendingAchievements FromString(string s) =>
-            JsonUtility.FromJson<PendingAchievements>(s);
+				if (_pendingAchievements != null)
+				{
+					_pendingAchievements.RemoveAllWithId(_unlockedAchievements.Keys.ToArray());
+				}
 
-        public override string ToString() => JsonUtility.ToJson(this, false);
+				FlushAchievements();
+				AllAchievementsChanged?.Invoke(AllAchievementIds);
+				UnlockedAchievementsChanged?.Invoke(UnlockedAchievementIds);
+			});
+			SaveToDisk();
+		}
 
-        public PendingAchievements()
-        {
-            pending = new List<DroleAchievement>();
-        }
+		private void SaveToDisk()
+		{
+			var json = _pendingAchievements.ToString();
+			PlayerPrefs.SetString(SaveKey, json);
+			PlayerPrefs.Save();
+		}
 
-        public void RemoveAllWithId(string[] ids)
-        {
-            pending.RemoveAll((item) => ids.Contains(item.id));
-        }
+		private void LoadFromDisk()
+		{
+			string s = PlayerPrefs.GetString(SaveKey, string.Empty);
+			if (s == null || s.Trim().Length == 0)
+			{
+				_pendingAchievements = new PendingAchievements();
+			}
+			else
+			{
+				_pendingAchievements = PendingAchievements.FromString(s);
+			}
+		}
+	}
 
-        internal void RemoveAchievement(DroleAchievement pendingAchievement)
-        {
-            if (!pending.Contains(pendingAchievement))
-            {
-                pending.Remove(pendingAchievement);
-            }
-        }
+	[Serializable]
+	public class PendingAchievements
+	{
+		public List<DroleAchievement> pending;
 
-        internal void AddAchievement(DroleAchievement pendingAchievement)
-        {
-            if (!pending.Contains(pendingAchievement))
-            {
-                pending.Add(pendingAchievement);
-            }
-        }
-    }
+		public PendingAchievements()
+		{
+			pending = new List<DroleAchievement>();
+		}
+
+		public static PendingAchievements FromString(string s)
+		{
+			return JsonUtility.FromJson<PendingAchievements>(s);
+		}
+
+		public override string ToString()
+		{
+			return JsonUtility.ToJson(this, false);
+		}
+
+		public void RemoveAllWithId(string[] ids)
+		{
+			pending.RemoveAll(item => ids.Contains(item.id));
+		}
+
+		internal void RemoveAchievement(DroleAchievement pendingAchievement)
+		{
+			if (!pending.Contains(pendingAchievement))
+			{
+				pending.Remove(pendingAchievement);
+			}
+		}
+
+		internal void AddAchievement(DroleAchievement pendingAchievement)
+		{
+			if (!pending.Contains(pendingAchievement))
+			{
+				pending.Add(pendingAchievement);
+			}
+		}
+	}
 }
