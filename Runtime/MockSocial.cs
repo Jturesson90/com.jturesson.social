@@ -163,6 +163,7 @@ namespace JTuresson.Social
 
 		public void ShowLeaderboardUI()
 		{
+			Debug.Log("ShowLeaderboardUI");
 			_social.ShowLeaderboardUI();
 		}
 
