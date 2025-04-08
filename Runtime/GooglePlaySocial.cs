@@ -11,6 +11,7 @@ namespace JTuresson.Social
 {
 	public class GooglePlaySocial : ISocialService
 	{
+		private readonly PlayGamesPlatform _social;
 		private readonly string cloudFileName;
 
 		private readonly bool debugMode;
@@ -19,7 +20,6 @@ namespace JTuresson.Social
 		private Action<bool> _loadCallback;
 
 		private Action<bool> _saveCallback;
-		private readonly PlayGamesPlatform _social;
 
 		public GooglePlaySocial(SocialAndroidSettingsSO settings, PlayGamesPlatform social)
 		{
@@ -48,7 +48,7 @@ namespace JTuresson.Social
 		public RuntimePlatform Platform => RuntimePlatform.Android;
 		public event Action<bool> IsAuthenticatedChanged;
 		public bool UserCanSign => true;
-		public string UserName => _social.GetUserDisplayName();
+		public string UserName => _social.IsAuthenticated() ? _social.GetUserDisplayName() : default;
 		public string StoreName { get; }
 
 		public byte[] CloudData { get; private set; }
