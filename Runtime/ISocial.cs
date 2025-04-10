@@ -47,7 +47,6 @@ namespace JTuresson.Social
 		void ShowLeaderboardUI();
 		ILeaderboard CreateLeaderboard();
 		void ShowLeaderboardUI(string leaderboardId);
-		void ReportLeaderboardTime(long milliseconds, string leaderboardId, Action<bool> callback);
 		void ReportLeaderboardTime(long milliseconds, string leaderboardId, string tag, Action<bool> callback);
 		void ReportLeaderboardInteger(int score, string leaderboardId, Action<bool> callback);
 		void LoadUserLeaderboardScore(ILeaderboard leaderboard, Action<bool> callback);
