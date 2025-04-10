@@ -1,4 +1,4 @@
-﻿#if UNITY_ANDROID
+﻿#if UNITY_ANDROID || UNITY_EDITOR
 using System;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
@@ -11,10 +11,10 @@ namespace JTuresson.Social
 {
 	public class GooglePlaySocial : ISocialService
 	{
-		private readonly PlayGamesPlatform _social;
-		private readonly string cloudFileName;
+		private readonly string _cloudFileName;
 
-		private readonly bool debugMode;
+		private readonly bool _debugMode;
+		private readonly PlayGamesPlatform _social;
 		private bool _currentlyLoadingFromCloud;
 		private bool _currentlySavingToCloud;
 		private Action<bool> _loadCallback;
@@ -27,17 +27,18 @@ namespace JTuresson.Social
 			LeaderboardsEnabled = settings.leaderboards;
 			AchievementsEnabled = settings.achievements;
 			CloudSaveEnabled = settings.cloudSave;
-			cloudFileName = settings.cloudFileName;
+			_cloudFileName = settings.cloudFileName;
 			StoreName = settings.storeName;
-			debugMode = settings.debugLog;
+			_debugMode = settings.debugLog;
 			_social = social;
 
+			PlayGamesPlatform.DebugLogEnabled = _debugMode;
 			if (_social == null)
 			{
 				_social = PlayGamesPlatform.Activate();
 			}
 
-			if (debugMode && _social == null)
+			if (_debugMode && _social == null)
 			{
 				Debug.LogError("Google Play Social - Social is still null");
 			}
@@ -75,7 +76,7 @@ namespace JTuresson.Social
 			_currentlyLoadingFromCloud = true;
 			_loadCallback = callback;
 
-			_social.SavedGame.OpenWithAutomaticConflictResolution(cloudFileName,
+			_social.SavedGame.OpenWithAutomaticConflictResolution(_cloudFileName,
 				DataSource.ReadCacheOrNetwork,
 				ConflictResolutionStrategy.UseLongestPlaytime,
 				SavedGameOpened);
@@ -84,14 +85,14 @@ namespace JTuresson.Social
 
 		public void Authenticate(Action<bool> callback)
 		{
-			if (debugMode)
+			if (_debugMode)
 			{
 				Debug.Log("Google Play Social - Authenticating");
 			}
 
 			if (Authenticated)
 			{
-				if (debugMode)
+				if (_debugMode)
 				{
 					Debug.Log("Google Play Social - Authenticating - Already Authenticated");
 				}
@@ -102,7 +103,7 @@ namespace JTuresson.Social
 
 			_social.Authenticate(status =>
 			{
-				if (debugMode)
+				if (_debugMode)
 				{
 					Debug.Log("Google Play Social - Authenticating - Authenticating done with status " +
 					          status);
@@ -124,7 +125,7 @@ namespace JTuresson.Social
 			_saveCallback = callback;
 			_currentlySavingToCloud = true;
 
-			_social.SavedGame.OpenWithAutomaticConflictResolution(cloudFileName,
+			_social.SavedGame.OpenWithAutomaticConflictResolution(_cloudFileName,
 				DataSource.ReadCacheOrNetwork, ConflictResolutionStrategy.UseLongestPlaytime,
 				(status, game) =>
 				{
@@ -173,7 +174,7 @@ namespace JTuresson.Social
 
 		public void ShowAchievementsUI()
 		{
-			if (debugMode)
+			if (_debugMode)
 			{
 				Debug.Log("Google Play Social - ShowAchievementsUI");
 			}
@@ -202,11 +203,6 @@ namespace JTuresson.Social
 			});
 		}
 
-		public void ReportLeaderboardTime(long score, string leaderboardId, Action<bool> callback)
-		{
-			_social.ReportScore(score, leaderboardId, callback);
-		}
-
 		public void ReportLeaderboardTime(long score, string leaderboardId, string tag,
 			Action<bool> callback)
 		{
@@ -215,7 +211,7 @@ namespace JTuresson.Social
 
 		public void ReportLeaderboardInteger(int score, string leaderboardId, Action<bool> callback)
 		{
-			ReportLeaderboardTime(score, leaderboardId, callback);
+			_social.ReportScore(score, leaderboardId, callback);
 		}
 
 		public void LoadUserLeaderboardScore(ILeaderboard leaderboard, Action<bool> callback)

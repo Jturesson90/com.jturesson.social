@@ -2,12 +2,15 @@
 
 namespace JTuresson.Social
 {
-    public interface ILeaderboards
-    {
-        void ReportScore(long score, string leaderboardId, Action<bool> callback, bool isMoreBetter = false);
-        void ReportScore(long score, string leaderboardId, string tag, Action<bool> callback, bool isMoreBetter = false);
-        void ShowUI();
-        void ShowUI(string leaderboardId);
-        long GetLocalUserAllTimeHighscore(string leaderboardId, bool isMoreBetter = false);
-    }
+	public interface ILeaderboards
+	{
+		void ReportInteger(int score, string leaderboardId, Action<bool> callback, bool isMoreBetter = false,
+			string tag = default);
+
+		void ReportTime(long score, string leaderboardId, Action<bool> callback, bool isMoreBetter = false,
+			string tag = default);
+
+		void ShowUI();
+		void ShowUI(string leaderboardId);
+	}
 }
