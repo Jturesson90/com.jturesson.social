@@ -135,7 +135,7 @@ namespace JTuresson.Social
 				return;
 			}
 
-			foreach (DroleAchievement pending in _pendingAchievements.pending)
+			foreach (DroleAchievement pending in _pendingAchievements.Pending)
 			{
 				if (pending.hasIncrement)
 				{
@@ -229,12 +229,8 @@ namespace JTuresson.Social
 	[Serializable]
 	public class PendingAchievements
 	{
-		public List<DroleAchievement> pending;
-
-		public PendingAchievements()
-		{
-			pending = new List<DroleAchievement>();
-		}
+		[SerializeField] private List<DroleAchievement> pending = new();
+		public IReadOnlyList<DroleAchievement> Pending => pending;
 
 		public static PendingAchievements FromString(string s)
 		{
@@ -251,15 +247,15 @@ namespace JTuresson.Social
 			pending.RemoveAll(item => ids.Contains(item.id));
 		}
 
-		internal void RemoveAchievement(DroleAchievement pendingAchievement)
+		public void RemoveAchievement(DroleAchievement pendingAchievement)
 		{
-			if (!pending.Contains(pendingAchievement))
+			if (pending.Contains(pendingAchievement))
 			{
 				pending.Remove(pendingAchievement);
 			}
 		}
 
-		internal void AddAchievement(DroleAchievement pendingAchievement)
+		public void AddAchievement(DroleAchievement pendingAchievement)
 		{
 			if (!pending.Contains(pendingAchievement))
 			{
