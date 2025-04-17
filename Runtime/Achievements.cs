@@ -168,11 +168,10 @@ namespace JTuresson.Social
 
 		private void UpdateAchievements(string id)
 		{
-			if (_allAchievements.ContainsKey(id))
+			if (_allAchievements.TryGetValue(id, out IAchievement achievement))
 			{
-				if (!_unlockedAchievements.ContainsKey(id))
+				if (_unlockedAchievements.TryAdd(id, achievement))
 				{
-					_unlockedAchievements.Add(id, _unlockedAchievements[id]);
 					UnlockedAchievementsChanged?.Invoke(UnlockedAchievementIds);
 				}
 			}
